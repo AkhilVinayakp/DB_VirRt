@@ -8,7 +8,7 @@ from pyspark.sql import functions as F
 def feat_ref_dump():
     source_df = (
         spark.readStream
-        .table("mycatalog.hp_prd_data.nearby_parsed_data")
+        .table("brz_raw_parsed")
     )
 
     # Compute derived columns

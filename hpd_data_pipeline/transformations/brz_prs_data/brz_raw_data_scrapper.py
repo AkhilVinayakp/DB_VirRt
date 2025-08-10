@@ -78,4 +78,5 @@ def brz_raw_data_scrapper():
     final_df = api_df.select("api_data.*")
 
     # Write the DataFrame to a Delta table
-    return final_df.writeStream.format("delta").option("checkpointLocation", "/tmp/checkpoints/brz_raw_data_scrapper").table("brz_raw_data_scrapper")
+    # return final_df.writeStream.format("delta").option("checkpointLocation", "/Volumes/mycatalog/hp_prd_data/checkpoint_v/brz_raw_data_scrapper").table("brz_raw_data_scrapper")
+    return final_df
