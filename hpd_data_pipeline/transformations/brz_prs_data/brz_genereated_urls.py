@@ -13,7 +13,7 @@ def brz_genereated_urls():
 
     # Read streaming source
     source_df = (
-        spark.readStream
+        spark.read
         .table("uszips")
     )
 
