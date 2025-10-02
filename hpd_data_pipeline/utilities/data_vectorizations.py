@@ -17,7 +17,7 @@ def create_template(propertyType, location, city, state, countryCode, postalCode
     # Helper function to handle null values 
     def safe_str(value, default="N/A"): 
         return str(value) if value is not None else default 
-    return ( f"Property Type: {safe_str(propertyType)}. " f"Located in {safe_str(location)}, {safe_str(city)}, {safe_str(state)}, {safe_str(countryCode)}, " f"ZIP {safe_str(postalCode)}. " f"Built in {safe_str(yearBuilt)}, approximately {safe_str(sqft)} sqft " f"on a {safe_str(lot_size)} sqft lot with {safe_str(beds)} bedrooms and {safe_str(baths)} bathrooms " f"({safe_str(fullbaths)} full, {safe_str(partialBaths)} partial). " f"Listed price is ${safe_str(house_price)}. " f"Stories: {safe_str(stories)}. " f"Additional Features: {safe_str(top_features)}. " f"Neighborhood population: {safe_str(zip_population)}, density: {safe_str(zip_density)}." )
+    return (f"Property Type: {safe_str(propertyType)}. " f"Located in {safe_str(location)}, {safe_str(city)}, {safe_str(state)}, {safe_str(countryCode)}, " f"ZIP {safe_str(postalCode)}. " f"Built in {safe_str(yearBuilt)}, approximately {safe_str(sqft)} sqft " f"on a {safe_str(lot_size)} sqft lot with {safe_str(beds)} bedrooms and {safe_str(baths)} bathrooms " f"({safe_str(fullbaths)} full, {safe_str(partialBaths)} partial). " f"Listed price is ${safe_str(house_price)}. " f"Stories: {safe_str(stories)}. " f"Additional Features: {safe_str(top_features)}. " f"Neighborhood population: {safe_str(zip_population)}, density: {safe_str(zip_density)}." )
 
 template_udf = udf(create_template, StringType())
 
@@ -69,26 +69,35 @@ records = spark.sql("""
     FROM property_text 
 """).toPandas().to_dict(orient="records")
 
-dense_index.upsert_records("example-namespace", records)
+def chunked(iterable, size):
+    if len(iterable) <= 100:
+        yield iterable
+    for i in range(0, len(iterable), size):
+        yield iterable[i:i + size]
 
-# ------------------ Control Table Update ------------------
-max_iter_wait = 0
-while True:
-    stats = dense_index.describe_index_stats()
-    if stats.total_vector_count >= 0:
-        print("vector-db populated with stats-----",stats)
-        spark.sql(f"""
-            INSERT INTO mycatalog.hp_prd_data.fp_vector_data_ctrl_table
-            (
-                last_processed_ts,
-                last_pushed_ts
-            )
-            SELECT current_timestamp(),
-                   (SELECT max(ingestion_timestamp) FROM property_text)
-        """)
-        break
-    if max_iter_wait > 5:
-        break
-    print("Waiting for vectors to be indexed...")
-    max_iter_wait += 1
-    time.sleep(5)
+for batch_num, batch in enumerate(chunked(vectors, 100), start=1):
+    dense_index.upsert_records("dev-namespace", records)
+
+    # ------------------ Control Table Update ------------------
+    max_iter_wait = 0
+    while True:
+        stats = dense_index.describe_index_stats()
+        if stats.total_vector_count >= 0:
+            print("Successfully pushed batch: ", batch_num)
+            print("vector-db populated with stats-----",stats)
+            spark.sql(f"""
+                INSERT INTO mycatalog.hp_prd_data.fp_vector_data_ctrl_table
+                (
+                    last_processed_ts,
+                    last_pushed_ts,
+                    batch_id
+                )
+                SELECT current_timestamp(),
+                    (SELECT max(ingestion_timestamp) FROM property_text)
+            """)
+            break
+        if max_iter_wait > 5:
+            break
+        print("Waiting for vectors to be indexed...")
+        max_iter_wait += 1
+        time.sleep(5)
