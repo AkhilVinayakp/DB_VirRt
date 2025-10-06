@@ -1,0 +1,6 @@
+db:
+  vector_store: "pinecone"
+  api_key: ${oc.env:PINECONE_API_KEY}
+  environment: "us-east1-gcp"
+  index_name: "rag_index"
+  namespace: "dev"

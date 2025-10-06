@@ -1,0 +1,4 @@
+defaults:
+  - llm: ollama
+  - vector_store: pinecone
+  
