@@ -1,0 +1,56 @@
+# -------------------
+# Python
+# -------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.cache
+.pytest_cache/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.env
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# -------------------
+# Terraform
+# -------------------
+*.tfstate
+*.tfstate.*
+.terraform/
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+
+# -------------------
+# Uvicorn / FastAPI / general logs
+# -------------------
+*.log
+*.db
+*.sqlite3
